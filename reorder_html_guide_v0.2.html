@@ -26,7 +26,7 @@
 <body>
 <main>
   <h1>reorder_html_v0.2.py</h1>
-  <p class="sub">Reorder the motif rows of a HOMER <code>knownResults.html</code> table by a chosen ranking method, optionally filter by q-value, and optionally export a <strong>table-only PDF figure</strong> with <strong>vector Arial Bold motif logos</strong>. This version adds per-column width control and a compact <code>--shortname</code> layout.</p>
+  <p class="sub">Reorder the motif rows of a HOMER <code>knownResults.html</code> table by a chosen ranking method, optionally filter by q-value, and optionally export a <strong>table-only PDF figure</strong> with <strong>vector Arial Bold motif logos</strong>.</p>
 
   <h2>Requirements</h2>
   <p>Python 3 (standard library only) for the HTML output.</p>
@@ -98,7 +98,7 @@
   <ul>
     <li>Columns: <strong>Motif</strong> (logo), <strong>Name</strong>, <strong>p</strong>, <strong>FDR</strong>, <strong>% targets</strong>, <strong>% bkg</strong>.</li>
     <li>Arial regular/bold, a bold header row, and a light grid.</li>
-    <li><strong>Vector Arial Bold logos:</strong> each motif logo is drawn as resolution-independent Arial Bold glyphs, so it stays crisp at any zoom and does not depend on the browser or a bitmap resolution.</li>
+    <li><strong>Vector Arial Bold logos:</strong> each motif logo is drawn as resolution-independent Arial Bold glyphs, so it stays crisp at any zoom and does not depend on a bitmap resolution.</li>
     <li>The <code>%</code> sign is stripped from the two percentage columns.</li>
     <li>Long names are truncated with an ellipsis (<code>&hellip;</code>) to fit the column; use <code>--shortname</code> for compact labels.</li>
     <li>Page width is <code>--width</code>; height is automatic unless <code>--height</code> is given. If a fixed height is too small, the script stops with a clear message.</li>
@@ -153,7 +153,7 @@ python reorder_html_v0.2.py --filename knownResults.html --reorder pctarget --pd
     </ul>
   </div>
 
-  <footer>reorder_html_v0.2.py &mdash; self-contained user guide. See <code>reorder_html_guide.html</code> or <code>reorder_html_guide_v0.1.html</code> for the earlier versions.</footer>
+  <footer>reorder_html_v0.2.py &mdash; user guide. See <code>history_v0.2.html</code> for the version history.</footer>
 </main>
 </body>
 </html>
