@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>reorder_html_v0.2.py - User Guide</title>
+<style>
+  :root { --fg:#1f2328; --muted:#57606a; --border:#d0d7de; --bg:#ffffff; --code:#f6f8fa; --accent:#0969da; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem 1rem; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--fg); background:var(--bg); line-height:1.6; }
+  main { max-width:820px; margin:0 auto; }
+  h1 { font-size:1.7rem; margin:0 0 .25rem; }
+  h2 { font-size:1.2rem; margin:2rem 0 .5rem; border-bottom:1px solid var(--border); padding-bottom:.25rem; }
+  p, li { color:var(--fg); }
+  .sub { color:var(--muted); margin-top:0; }
+  code { background:var(--code); padding:.15em .35em; border-radius:4px; font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace; font-size:.9em; }
+  pre { background:var(--code); border:1px solid var(--border); border-radius:6px; padding:1rem; overflow:auto; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:.5rem 0 1rem; }
+  th, td { border:1px solid var(--border); padding:.5rem .65rem; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .note { border-left:4px solid var(--accent); background:#ddf4ff55; padding:.6rem .9rem; border-radius:0 6px 6px 0; margin:1rem 0; }
+  footer { margin-top:2.5rem; color:var(--muted); font-size:.85rem; border-top:1px solid var(--border); padding-top:.75rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>reorder_html_v0.2.py</h1>
+  <p class="sub">Reorder the motif rows of a HOMER <code>knownResults.html</code> table by a chosen ranking method, optionally filter by q-value, and optionally export a <strong>table-only PDF figure</strong> with <strong>vector Arial Bold motif logos</strong>. This version adds per-column width control and a compact <code>--shortname</code> layout.</p>
+
+  <h2>Requirements</h2>
+  <p>Python 3 (standard library only) for the HTML output.</p>
+  <p>PDF export (<code>--pdf</code>) additionally needs <strong>PyMuPDF</strong> (<code>pip install pymupdf</code>) and an Arial font, auto-detected from the usual system locations.</p>
+
+  <h2>Usage</h2>
+  <pre><code>python reorder_html_v0.2.py --filename &lt;input.html&gt; --reorder {pctarget|difference} [--q &lt;threshold&gt;]
+                      [--pdf [--shortname] [--fontsize &lt;pt&gt;] [--rowheight &lt;pt&gt;]
+                       [--width &lt;in&gt;] [--height &lt;in&gt;] [--colwidth &lt;w1,...,w6&gt;]
+                       [--pdfout &lt;file&gt;]]</code></pre>
+
+  <h2>Arguments</h2>
+  <table>
+    <thead><tr><th>Argument</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--filename</code></td><td>Yes</td><td>Path to the input <code>.html</code> file (the HOMER known-results table).</td></tr>
+      <tr><td><code>--reorder</code></td><td>Yes</td><td>Ranking method. One of <code>pctarget</code> or <code>difference</code> (see below).</td></tr>
+      <tr><td><code>--q</code></td><td>No</td><td>Numeric threshold for the <em>&ldquo;q-value (Benjamini)&rdquo;</em> column. Any row whose q-value is <strong>greater than or equal to</strong> this value is removed. When used, <code>_q&lt;value&gt;</code> is appended to the output filename.</td></tr>
+      <tr><td><code>--pdf</code></td><td>No</td><td>Also create a <strong>table-only PDF figure</strong> of the reordered (and optionally filtered) rows.</td></tr>
+      <tr><td><code>--shortname</code></td><td>No</td><td>PDF only. Show the motif Name only up to the first <code>/</code> and <strong>narrow the Name column</strong> to fit the shortened labels, reducing the overall figure width.</td></tr>
+      <tr><td><code>--fontsize</code></td><td>No</td><td>PDF only. Font size in pt (default <code>8</code>).</td></tr>
+      <tr><td><code>--rowheight</code></td><td>No</td><td>PDF only. Row height in pt (default <code>18</code>; derived from <code>--height</code> when given).</td></tr>
+      <tr><td><code>--width</code></td><td>No</td><td>PDF only. Page width in inches (default <code>8.5</code>; further reduced by <code>--shortname</code>).</td></tr>
+      <tr><td><code>--height</code></td><td>No</td><td>PDF only. Page height in inches (default: <strong>auto</strong>, sized to fit the rows).</td></tr>
+      <tr><td><code>--colwidth</code></td><td>No</td><td>PDF only. Six comma-separated integers (relative weights) for columns 1&ndash;6; <code>0</code> keeps that column's default (see below).</td></tr>
+      <tr><td><code>--pdfout</code></td><td>No</td><td>PDF only. Output PDF path. If no directory is given it is placed next to the input file.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ranking methods</h2>
+  <table>
+    <thead><tr><th>Value</th><th>Sort key (descending)</th><th>Resulting file</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>pctarget</code></td>
+        <td>Column <em>&ldquo;% of Targets Sequences with Motif&rdquo;</em></td>
+        <td><code>&lt;name&gt;_pctarget.html</code></td>
+      </tr>
+      <tr>
+        <td><code>difference</code></td>
+        <td><em>&ldquo;% of Targets Sequences with Motif&rdquo;</em> &minus; <em>&ldquo;% of Background Sequences with Motif&rdquo;</em></td>
+        <td><code>&lt;name&gt;_difference.html</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Column widths (<code>--colwidth</code>)</h2>
+  <p>The six integers are <strong>relative weights</strong> for columns <strong>1&ndash;6</strong> (Motif, Name, p, FDR, % targets, % bkg). The available table width is split in proportion to the weights. A value of <code>0</code> means &ldquo;use this column's default&rdquo;.</p>
+  <table>
+    <thead><tr><th>Column</th><th>Default weight</th></tr></thead>
+    <tbody>
+      <tr><td>1 &mdash; Motif</td><td>22</td></tr>
+      <tr><td>2 &mdash; Name</td><td>40</td></tr>
+      <tr><td>3 &mdash; p</td><td>9</td></tr>
+      <tr><td>4 &mdash; FDR</td><td>9</td></tr>
+      <tr><td>5 &mdash; % targets</td><td>10</td></tr>
+      <tr><td>6 &mdash; % bkg</td><td>10</td></tr>
+    </tbody>
+  </table>
+  <p>Examples (values are weights, not percentages):</p>
+  <ul>
+    <li><code>--colwidth 0,0,0,0,0,0</code> &mdash; the defaults above.</li>
+    <li><code>--colwidth 30,30,10,10,10,10</code> &mdash; wider Motif and Name columns.</li>
+    <li><code>--colwidth 0,50,0,0,0,0</code> &mdash; only the Name column changes (weight 50).</li>
+  </ul>
+  <p>When <code>--shortname</code> is used and the Name column is left at its default (weight <code>0</code>), the Name column is instead sized to fit the shortened labels; the other five columns keep their absolute widths and the page becomes narrower. Setting an explicit Name weight (a non-zero second value) disables that automatic shrink.</p>
+
+  <h2>The PDF figure</h2>
+  <ul>
+    <li>Columns: <strong>Motif</strong> (logo), <strong>Name</strong>, <strong>p</strong>, <strong>FDR</strong>, <strong>% targets</strong>, <strong>% bkg</strong>.</li>
+    <li>Arial regular/bold, a bold header row, and a light grid.</li>
+    <li><strong>Vector Arial Bold logos:</strong> each motif logo is drawn as resolution-independent Arial Bold glyphs, so it stays crisp at any zoom and does not depend on the browser or a bitmap resolution.</li>
+    <li>The <code>%</code> sign is stripped from the two percentage columns.</li>
+    <li>Long names are truncated with an ellipsis (<code>&hellip;</code>) to fit the column; use <code>--shortname</code> for compact labels.</li>
+    <li>Page width is <code>--width</code>; height is automatic unless <code>--height</code> is given. If a fixed height is too small, the script stops with a clear message.</li>
+  </ul>
+
+  <h2>Output filenames</h2>
+  <p>The HTML suffix is inserted before the extension: <code>&lt;name&gt;_&lt;method&gt;[_q&lt;value&gt;].html</code>. The PDF, when <code>--pdfout</code> is omitted, uses the same base and suffix with a <code>.pdf</code> extension.</p>
+  <table>
+    <thead><tr><th>Command options</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td><code>--reorder pctarget</code></td><td><code>knownResults_pctarget.html</code></td></tr>
+      <tr><td><code>--reorder pctarget --q 0.05</code></td><td><code>knownResults_pctarget_q0.05.html</code></td></tr>
+      <tr><td><code>--reorder pctarget --pdf</code></td><td><code>knownResults_pctarget.html</code> and <code>knownResults_pctarget.pdf</code></td></tr>
+      <tr><td><code>--reorder difference --q 0.05 --pdf --shortname</code></td><td><code>knownResults_difference_q0.05.html</code> and <code>knownResults_difference_q0.05.pdf</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>What it does</h2>
+  <ul>
+    <li>Reads the table and reorders the motif rows in <strong>descending</strong> order by the selected key.</li>
+    <li>The <strong>Rank</strong> column is <strong>renumbered 1..N</strong> to match the new display order.</li>
+    <li>Everything else (header, footer, links, SVG logos, other columns) is preserved byte-for-byte in the HTML.</li>
+    <li>Ties keep their original relative order (stable sort).</li>
+    <li>With <code>--q</code>, rows with q-value <code>&gt;=</code> the threshold are dropped before sorting, so Rank continues to run <code>1..N</code> over the kept rows.</li>
+    <li>The output is written next to the input file. The input file is not modified.</li>
+  </ul>
+
+  <h2>Examples</h2>
+  <pre><code># Rank by % of target sequences
+python reorder_html_v0.2.py --filename knownResults.html --reorder pctarget
+# -> writes knownResults_pctarget.html
+
+# Drop rows with q-value >= 0.05, then rank by (target % - background %)
+python reorder_html_v0.2.py --filename knownResults.html --reorder difference --q 0.05
+# -> writes knownResults_difference_q0.05.html
+
+# Compact short-label figure with a wider Motif/Name area
+python reorder_html_v0.2.py --filename knownResults.html --reorder pctarget --pdf --shortname --colwidth 30,30,10,10,10,10
+
+# Fully custom figure (large fonts, fixed height)
+python reorder_html_v0.2.py --filename knownResults.html --reorder pctarget --pdf \
+    --fontsize 10 --rowheight 22 --width 11 --height 13 --pdfout figure.pdf</code></pre>
+
+  <div class="note">
+    <strong>Notes:</strong>
+    <ul>
+      <li>The suffix is inserted before the extension, so <code>knownResults.html</code> becomes <code>knownResults_pctarget.html</code>.</li>
+      <li>The exact <code>--q</code> text you type is used in the filename (e.g. <code>--q 0.050</code> gives <code>_q0.050</code>), while filtering uses its numeric value.</li>
+      <li><code>--shortname</code>, <code>--fontsize</code>, <code>--rowheight</code>, <code>--width</code>, <code>--height</code>, <code>--colwidth</code> and <code>--pdfout</code> require <code>--pdf</code>; otherwise the script exits with an error.</li>
+      <li><code>--colwidth</code> must contain exactly six non-negative integers separated by commas.</li>
+      <li>If PyMuPDF or an Arial font is unavailable, the HTML output is still written and the script reports an error for the PDF step.</li>
+    </ul>
+  </div>
+
+  <footer>reorder_html_v0.2.py &mdash; self-contained user guide. See <code>reorder_html_guide.html</code> or <code>reorder_html_guide_v0.1.html</code> for the earlier versions.</footer>
+</main>
+</body>
+</html>
