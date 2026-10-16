@@ -1,0 +1,19 @@
+# reorder_html — Version History
+
+Concise record of what each version of the script added and removed.
+
+| Version | Added | Removed |
+| --- | --- | --- |
+| **v0.4** (current) | `--genes` — write a tab-separated text file (default `genes.txt`, or `--genesoutfile`) mapping each motif of the output table to the gene name(s) embedded in its name (`GeneName(Family)/Experiment/DB`, family stripped, `,`/`:`-split; one row per gene per ENSEMBL id) and the human ENSEMBL gene id, looked up case-insensitively (e.g. `Bcl11a` matches `BCL11A`) in a `--genes_id_map` file. Gene tokens with no ENSEMBL id get a row with an empty third column. Three columns: original motif name, gene name, ENSG id; no header.<br>`--genesoutfile <file>` — `--genes` output path (default `genes.txt`; a bare name resolves next to the input HTML), requires `--genes`.<br>`--genes_id_map <file>` — gene→ENSEMBL-id map: two-column tab-separated (col1 gene name, col2 human `ENSG...` id; one line per id; lines whose second column is not `ENSG…` are skipped, which also drops a BioMart header line), required with `--genes`. | — |
+| **v0.3** (previous) | `--reorder ratio` — rank by `% targets / % background`.<br>`--reorder <positions>` — explicit output order from a comma-separated list of 1-based row positions (a subset is allowed).<br>`--colnames` — six custom PDF column names.<br>`--reordergroups` — group rows by motif group and order groups by their max method value.<br>`--showrank` — prepend a narrow Rank column to the PDF.<br>`--nolines` — omit the PDF table grid lines.<br>`--linescolor <hex>` — grid-line colour (default `#999999`, e.g. `#CCCCCC` pale grey).<br>`--colorgroups` — fill the PDF Name cells with the group colour under the text.<br>`--colorgroup_palette <hex,hex,…>` — `--colorgroups` colours assigned to groups sequentially by first appearance and recycled if more groups than colours (default `#FFCC99,#99FFCC,#66CCFF,#FFFF99,#FF9933,#33FF99,#3399CC,#CCCC00,#CCFFCC,#99CC00,#CCCCCC,#9966CC`); the palette requires `--colorgroups`.<br>`--heatmap <file>` — PNG heatmap of the pairwise consensus-sequence similarity of the table motifs (Needleman-Wunsch alignment, IUPAC-aware), rows/columns ordered by deterministic k-means with an automatic k (`round(sqrt(n/2))` clamped to `[2, n]`).<br>`--knownresults_txt <file>` — consensus source file (tab-separated, consensus in column 2), required with `--heatmap`.<br>`--heatmapscale <min,max>` — heatmap colour-scale range in percent (default `0,100`); values outside the range clip to the scale ends; requires `--heatmap`.<br>`--reorder` is now optional (with `--reordergroups` it only supplies the `--showrank` numbers); `--q` is rejected with a custom position list, and a position list cannot be combined with `--reordergroups`. | — |
+| **v0.2** | Vector Arial Bold motif logos (resolution-independent).<br>`--colwidth w1..w6` — relative column weights (`0` = default).<br>`--shortname` now also narrows the Name column and the figure width. | `--res` (logos are vector now). |
+| **v0.1** | Browser-free, table-only PDF figure via PyMuPDF (`--pdf`).<br>`--shortname` (labels cut at the first `/`).<br>PDF layout options: `--fontsize`, `--rowheight`, `--width`, `--height`, `--res`, `--pdfout`.<br>PDF-only options require `--pdf`. | — |
+| **v0.0** (original) | Reorder `knownResults.html` rows by `pctarget` or `difference`.<br>`--q` threshold filter (rows with q-value `>=` the value are dropped).<br>`--pdf` exported the full reordered HTML page via a headless browser. | — |
+
+## Unchanged throughout
+
+- The **HTML** output is byte-identical across versions for the same inputs.
+- **Rank** is renumbered `1..N`; ties keep their original order (stable sort).
+- Output filenames follow `<name>_<method>[_q<value>].html`.
+
+See `reorder_html_guide_v0.4.html` for the current user guide.
